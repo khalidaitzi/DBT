@@ -1,3 +1,4 @@
+{{ config(materialized='table') }}
 WITH daily_weather as (
 
 
