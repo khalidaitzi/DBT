@@ -4,3 +4,4 @@ sources:
     schema: DEMO_SCHEMA
     tables:
       - name: weather
+      - name: bike
