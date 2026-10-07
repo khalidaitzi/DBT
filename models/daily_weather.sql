@@ -1,49 +1,41 @@
 {{ config(materialized='table') }}
+WITH daily_weather as (
 
-WITH daily_weather AS (
 
-    SELECT
-        DATE(time) AS daily_weather,
-        weather,
-        temp,
-        pressure,
-        humidity,
-        clouds
-    FROM {{ source('demo', 'weather') }}
+select
 
-),
+date(time) as daily_weather,
+weather,
+temp,
+pressure,
+humidity,
+clouds
 
-daily_weather_agg AS (
+from {{ source('demo', 'weather') }}
 
-    SELECT
-        daily_weather,
-        weather,
-        ROUND(AVG(temp), 2) AS avg_temp,
-        ROUND(AVG(pressure), 2) AS avg_pressure,
-        ROUND(AVG(humidity), 2) AS avg_humidity,
-        ROUND(AVG(clouds), 2) AS avg_clouds,
-        COUNT(weather) AS weather_count
 
-    FROM daily_weather
-
-    GROUP BY daily_weather, weather
 
 ),
 
-daily_weather_ranked AS (
+daily_weather_agg as (
 
-    SELECT
-        *,
-        ROW_NUMBER() OVER (
-            PARTITION BY daily_weather
-            ORDER BY weather_count DESC
-        ) AS weather_rank
+select
+daily_weather,
+weather,
+round(avg(temp),2) as avg_temp,
+round(avg(pressure),2) as avg_pressure,
+round(avg(humidity),2) as avg_humidity,
+round(avg(clouds),2) as avg_clouds
 
-    FROM daily_weather_agg
+from daily_weather
 
+group by daily_weather, weather
+
+qualify ROW_NUMBER() OVER (PARTITION BY daily_weather ORDER BY count(weather) desc) =1
 )
 
-SELECT
-    *
-FROM daily_weather_ranked
-WHERE daily_weather = '2016-11-07'
+
+
+select
+*
+from daily_weather_agg where daily_weather ='2016-11-07'
